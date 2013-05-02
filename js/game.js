@@ -3,18 +3,19 @@
 	(c) Tom Wiesing 2013
 */
 
-var startbutton, aboutbutton, table; //Global variables
+var startbutton, aboutbutton, table, w, h, turn; //Global variables
 
 /*
 	Start a game
 */
 var game_start = function(){
 	
-	var turn = false;
+	turn = false;
 
 	//start the game
-	var h = parseInt($("#gheight").spinner("value"));
-	var w = parseInt($("#gwidth").spinner("value"));
+	h = parseInt($("#gheight").spinner("value"));
+	w = parseInt($("#gwidth").spinner("value"));
+	
 	if(isNaN(h) || isNaN(w)){
 		alert("Invalid size. Please try again");
 		return; 
@@ -53,7 +54,7 @@ var game_start = function(){
 	game_update();
 };
 
-/*
+	/*
 		Update the game
 	*/
 	var game_update = function(){
