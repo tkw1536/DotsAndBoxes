@@ -1,0 +1,60 @@
+/*
+ * Dots and Boxes
+ * (c) Tom Wiesing 2013
+ */
+body {
+	font-family: "Trebuchet MS", "Helvetica", "Arial",  "Verdana", "sans-serif";
+}
+
+.ui-dialog{
+	font-size: 80%;
+}
+
+#gheight, #gwidth {
+	width: 40px; 
+}
+
+.dot {
+	background-color: black;
+	width: 10px; 
+	height:10px; 
+}
+
+.selectablevert {
+	width: 60px;
+	height: 10px; 
+}
+
+.selectablehort {
+	width: 10px;
+	height: 60px; 
+}
+
+.red:hover{
+	background-color: red;
+}
+
+.blue:hover{
+	background-color: blue;
+}
+
+.selected{
+	background-color: black;
+}
+
+.selected:hover{
+	background-color: black !important;
+}
+
+.takenblue {
+	background-color: blue;
+}
+
+.takenred {
+	background-color: red;
+}
+
+table {
+	border-width: 0px; 
+	border-collapse:collapse;
+}
