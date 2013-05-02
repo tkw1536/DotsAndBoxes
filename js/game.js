@@ -17,16 +17,19 @@ var game_start = function(){
 	var w = parseInt($("#gwidth").spinner("value"));
 	if(isNaN(h) || isNaN(w)){
 		alert("Invalid size. Please try again");
+		return; 
 	}
 	
-	startbutton.val("Restart game"); //set game restrt text
+	startbutton.val("Restart game");
 	
+	//calc actual table width & height
 	var aw = 2*w+1;
 	var ah = 2*h+1;
 	
 	table = create_table(aw, ah);
 	
 	
+	//table formating
 	var rows_dots = $("");
 	var column_dots = $("");
 	for(var i=0;i<ah;i=i+2){
@@ -35,17 +38,22 @@ var game_start = function(){
 	for(var i=0;i<aw;i=i+2){
 		column_dots = column_dots.add(table_get_column(i));
 	}
+	
 	var dots = rows_dots.filter(column_dots)
 	.removeClass("selectablehort")
 	.removeClass("selectablevert")
 	.addClass("dot");
+	
 	var rows = rows_dots.not(dots).addClass("selectablevert");
 	var columns = column_dots.not(dots).addClass("selectablehort");
 
 	$("#table").html("").append(table).append("<br>")
 	.append("<span id='winners'></span><br />Blue: <span id='scoreblue'></span> <br />Red: <span id='scorered'></span>");
-	
-	/*
+		
+	game_update();
+};
+
+/*
 		Update the game
 	*/
 	var game_update = function(){
@@ -122,9 +130,6 @@ var game_start = function(){
 			$("<div title='Same score'>Both have the same score! It's a tie!</div>").dialog({modal: true});
 		}
 	};
-	
-	game_update();
-};
 
 /*
 	Checks if a square is taken
