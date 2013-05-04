@@ -1,17 +1,29 @@
 /*
- * Dots and Boxes
+ * Dots and Boxes - Style.css
  * (c) Tom Wiesing 2013
+ *
+ * This work is licensed under the Creative Commons Attribution-NonCommercial 3.0 Unported License. 
+ * To view a copy of this license, visit http://creativecommons.org/licenses/by-nc/3.0/ or 
+ * send a letter to Creative Commons, 444 Castro Street, Suite 900, Mountain View, California, 94041, USA.
  */
-body {
+html, body {
 	font-family: "Trebuchet MS", "Helvetica", "Arial",  "Verdana", "sans-serif";
+	height: 95%; 
+	width: 95%; 
 }
 
 .ui-dialog{
 	font-size: 80%;
 }
 
-#gheight, #gwidth {
+#gheight, #gwidth, #playercount{
 	width: 40px; 
+}
+
+#gamearea > span {
+	color: grey;
+	font-size: 200%; 
+	font-style:italic; 
 }
 
 .dot {
@@ -30,28 +42,9 @@ body {
 	height: 60px; 
 }
 
-.red:hover{
-	background-color: red;
-}
-
-.blue:hover{
-	background-color: blue;
-}
 
 .selected{
 	background-color: black;
-}
-
-.selected:hover{
-	background-color: black !important;
-}
-
-.takenblue {
-	background-color: blue;
-}
-
-.takenred {
-	background-color: red;
 }
 
 table {

@@ -1,23 +1,30 @@
 /*
-	Dots and Boxes
+	Dots and Boxes - Game.js
 	(c) Tom Wiesing 2013
+
+	This work is licensed under the Creative Commons Attribution-NonCommercial 3.0 Unported License. 
+	To view a copy of this license, visit http://creativecommons.org/licenses/by-nc/3.0/ or 
+	send a letter to Creative Commons, 444 Castro Street, Suite 900, Mountain View, California, 94041, USA.
 */
 
-var startbutton, aboutbutton, table, w, h, turn; //Global variables
+var startbutton, table, w, h, turn, playercount, Player_Colors; //Global variables
+
+Player_Colors = ["red", "blue", "green", "yellow", "orange", "grey"];
 
 /*
 	Start a game
 */
 var game_start = function(){
 	
-	turn = false;
+	turn = -1; //reset turns
 
-	//start the game
+	playercount = parseInt($("#playercount").spinner("value"));
+
 	h = parseInt($("#gheight").spinner("value"));
 	w = parseInt($("#gwidth").spinner("value"));
 	
-	if(isNaN(h) || isNaN(w)){
-		alert("Invalid size. Please try again");
+	if(isNaN(h) || isNaN(w) || isNaN(playercount)){
+		alert("Please enter valid numbers! ");
 		return; 
 	}
 	
@@ -48,8 +55,7 @@ var game_start = function(){
 	var rows = rows_dots.not(dots).addClass("selectablevert");
 	var columns = column_dots.not(dots).addClass("selectablehort");
 
-	$("#table").html("").append(table).append("<br>")
-	.append("<span id='winners'></span><br />Blue: <span id='scoreblue'></span> <br />Red: <span id='scorered'></span>");
+	$("#gamearea").html("").append(table);
 		
 	game_update();
 };
@@ -61,76 +67,120 @@ var game_start = function(){
 		var data = table
 		.find(".selectablevert, .selectablehort")
 		.off("click")
+		.off("mouseenter mouseleave")
+		.removeAttr("style")
+		.not(".selected")
+
 		.click(function(){
 			$(this).addClass("selected");
 			game_update();
 		});
-		
+
 		var did_something = false;
 		
-		var blue = 0;
-		var red = 0;
+		var points = []
+		for(var i=0;i<playercount;i++){
+			points.push(0);		
+		}
 		
 		for(var i=0;i<h;i++){
 			for(var j=0;j<w;j++){
 				if(!is_taken(i, j) && is_surrounded(i, j)){
-					get_table_cell(2*i+1, 2*j+1).addClass("taken").addClass(turn?"takenred":"takenblue");
+					get_table_cell(2*i+1, 2*j+1)
+					.addClass("taken")
+					.css("background-color", getplayercolor(turn))
+					.data("playerId", turn);
 					did_something = true;
 				}
 				if(is_taken(i, j)){
-					if(get_table_cell(2*i+1, 2*j+1).hasClass("takenred")){
-						red++;
-					} else {
-						blue++;
-					}
+					points[
+						get_table_cell(2*i+1, 2*j+1).data("playerId")
+					]++;
 				}
 			}
 		}
 		
 		if(!did_something){
-			turn = !turn;
-			data
-			.removeClass(turn?"blue":"red")
-			.addClass(turn?"red":"blue")
+			turn = (turn + 1) % playercount;
+		}
+
+		data
+		.hover(function(){
+			$(this).css("background-color", getplayercolor(turn));
+		}, function(){
+			$(this).removeAttr("style");
+		});
+		
+		var scoreNode = $("#scores").html("");
+
+		if(gameHasWinner(points)){
+			scoreNode.append("The first place can no longer change. <br />");		
+		} else {
+			scoreNode.append("<br />");		
 		}
 		
-		$("#scoreblue").text(blue);
-		$("#scorered").text(red);
+		var ranking = makePlayerRanking(points, playercount);
 		
-		if(blue + red == h*w && blue == red){
-			end_game(0);
-		} else if(blue > h*w / 2){
-			end_game(1);
-		} else if(red > h*w / 2){
-			end_game(-1);
+		var taken = 0;
+		
+		for(var i=0;i<ranking.length;i++){
+			for(var j=0;j<ranking[i].length;j++){
+				var player = ranking[i][j];
+				var score = points[player];
+				var color = getplayercolor(player);
+				taken += score; 
+				var node = $("<span>").text((i+1).toString()+") Player "+(player+1)+" - "+score+" Boxes").css("background-color", color).width(200);
+				scoreNode.append(
+					node, 
+					$("<br />")
+				);
+				if(player == turn){node.css("font-weight", "bold");}
+			}
 		}
+		
+		scoreNode.append(
+			$("<span>").text(""+taken+"/"+(w*h)+" Boxes occupied. ").width(200), 
+			$("<br />")
+		);
 	};
-	
-	/*
-		End the game
-	*/
-	var end_game = function(winner){
-		//1 = blue wins
-		//-1 = red wins
-		//0 = tie
-		table
-		.find(".selectablevert, .selectablehort")
-		.removeClass("red").removeClass("blue")
-		.off("click");
-		
-		if(winner == 1){
-			$("#winners").text("Blue has more than half the boxes! Blue wins! ");
-			$("<div title='Blue wins!'>Blue has more than half the boxes! Blue wins! </div>").dialog({modal: true});
+
+/* Get player ranking */
+var makePlayerRanking = function(player_scores){
+	var arr = [];
+	for(var i=0;i<playercount;i++){
+		arr.push([i, player_scores[i]]);
+	}
+	arr.sort(function(left, right){
+		return (left[1]>=right[1])?(-1):1;
+	});
+	var res = [];
+	var points = -1;
+	for(var i=0;i<playercount;i++){
+		var playerid = arr[i][0];
+		if(points == arr[i][1]){
+			res[res.length-1].push(arr[i][0]);
+		} else {
+			res.push([arr[i][0]]);
 		}
-		if(winner == -1){
-			$("#winners").text("Red has more than half the boxes! Red wins! ");
-			$("<div title='Red wins!'>Red has more than half the boxes! Red wins! </div>").dialog({modal: true});
+
+		points = arr[i][1];
+	}
+	return res;
+};
+/*
+	Check if the game has a winner. 
+*/
+var gameHasWinner = function(player_scores){
+	var total = 0;
+	var maxPoints = w*h;
+	for(var i=0;i<player_scores.length;i++){
+		total += player_scores[i];
+		if(player_scores[i] > (maxPoints) / 2){
+			return true;
 		}
-		if(winner == 0){
-			$("#winners").text("Both have the same score! It's a tie!");
-			$("<div title='Same score'>Both have the same score! It's a tie!</div>").dialog({modal: true});
-		}
-	};
+	}
+	return (total == maxPoints);
+};
 
 /*
 	Checks if a square is taken
@@ -149,7 +199,14 @@ var is_surrounded = function(i, j){
 		get_table_cell(2*i+1, 2*j+2).is(".selected"));
 }
 
-/*">
+/*
+	Get Player Colors
+*/
+var getplayercolor = function(i){
+	return Player_Colors[i];
+};
+
+/*
 	Create a table
 	@param	w	Table width
 	@param	h	Table height
@@ -169,8 +226,6 @@ var create_table = function(w, h){
 
 /*
 	Get table cell
-	@param	i	Table index i
-	@param	j	Table index j
 */
 var get_table_cell = function(i, j){
 	return table.find("tr:nth-child("+(i+1)+") td:nth-child("+(j+1)+")");
@@ -190,17 +245,11 @@ var table_get_column = function(i){
 	return table.find("tr td:nth-child("+(i+1)+")");
 }
 
-/*
-	Show the about dialog
-*/
-var about_dialog = function(){
-	$("#dialog-about").dialog({modal: true, width: 400, height: 300});
-};
 
+//Inititalisation
 $(function(){
 	var buttons = $(":button, a.button").button();
 	startbutton = buttons.eq(0);
-	aboutbutton = buttons.eq(1);
 	
 	$("#gheight, #gwidth").spinner({
 		spin: function(event, ui) {
@@ -210,13 +259,63 @@ $(function(){
 			}
 		}
 	}); 
+
+	$("#playercount").spinner({
+		spin: function(event, ui) {
+			if(ui.value<2) {
+				$(this).spinner( "value", 2 );
+				return false;
+			}
+			if(ui.value>Player_Colors.length) {
+				$(this).spinner( "value", Player_Colors.length );
+				return false;
+			}
+		}
+	}); 
 	
-	//Init buttons
-	aboutbutton.click(function(){
-		about_dialog();
-	});
+	
 	
 	startbutton.click(game_start);
 	
-	$("#dialog-about").hide();
+	$("#controls, #about, #scores").hide();
+	$("#gamearea").find("span").text("Loading Game... ");
+	
+	window.setTimeout(function(){
+		$("#gamearea").find("span").text("Press start to start a new game. ");
+
+		$("#about").dialog({
+			closeOnEscape: false,
+			open: function(event, ui) { $(this).parent().find(".ui-dialog-titlebar-close").remove(); },
+			position: {
+				my: "right top", 
+				at: "right top", 
+				of: $("body")
+			}
+		});
+	
+		$("#controls").dialog({
+			closeOnEscape: false,
+			open: function(event, ui) {
+				$(this).parent().find(".ui-dialog-titlebar-close").remove();
+			},
+			position: {
+				my: "right top", 
+				at: "left top", 
+				of: $("#about").parent()
+			}
+		});
+	
+		$("#scores").dialog({
+			closeOnEscape: false,
+			open: function(event, ui) {
+				$(this).parent().find(".ui-dialog-titlebar-close").remove();
+			},
+			height: 250,
+			position: {
+				my: "right top", 
+				at: "right bottom", 
+				of: $("#controls").parent()
+			}
+		});
+	}, 100);
 });

@@ -1,10 +1,17 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
 "http://www.w3.org/TR/html4/loose.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+	Dots and Boxes - index.html
+	(c) Tom Wiesing 2013	
+
+	This work is licensed under the Creative Commons Attribution-NonCommercial 3.0 Unported License. 
+	To view a copy of this license, visit http://creativecommons.org/licenses/by-nc/3.0/ 
+	or send a letter to Creative Commons, 444 Castro Street, Suite 900, Mountain View, California, 94041, USA.
+-->
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
         <title>Dots and Boxes</title>
-        <!-- (c) Tom Wiesing 2013 -->
         
         <!-- Dependencies --->
         <!-- jQuery -->
@@ -21,28 +28,37 @@
         <link rel="stylesheet" type="text/css" href="css/style.css">
     </head>
     <body>
-        <h1>Dots and Boxes</h1>
-        
-        <div id="table">
-        	<!-- The Table goes here -->
+	<!-- Game area -->
+        <div id="gamearea">
+		<span>You need JavaScript to view this page. </span>
         </div>
         
-        <div>
+	<!-- Settings -->
+        <div id="controls" title="Game controls">
         	Size: <input id="gheight" value="3" > x <input id="gwidth" value="3"> <br />
+		Player(s): <input id="playercount" value="2" > <br />
         	<input type="button" value="Start">
-        	<input type="button" value="About">
         </div>
+
+	<!-- Scores -->
+	<div id="scores" title="Scores">
+		Once you start a game, scores will show up here. 
+	</div>
         
         <!-- About Dialog -->
-        <div id="dialog-about" title="About Dots and Boxes">
+        <div id="about" title="About Dots and Boxes">
         	Dots and Boxes is an implementation of the game dots and boxes for
-        	a homework in General Computer Science II. 
+        	a homework in General Computer Science II. <br />
+		<a class="button" href="https://github.com/tkw1536/DotsAndBoxes" target="_blank">Sourcecode on Github</a> <br />
         	<br />
+		License: <br /><a rel="license" href="http://creativecommons.org/licenses/by-nc/3.0/" target="_blank"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc/3.0/80x15.png" /></a> &copy; Tom Wiesing 2013<br />
+		<br />
         	This project uses: <br />
-        	<a class="button" href="http://jquery.com/" target="_blank">jQuery 2.0.0</a> released under <a href='https://github.com/jquery/jquery/blob/master/MIT-LICENSE.txt' target='_blank'>MIT license</a><br />
-        	<a class="button" href="http://jqueryui.com/" target="_blank">jQuery UI 1.10.2</a> released under <a href='https://github.com/jquery/jquery-ui/blob/master/MIT-LICENSE.txt' target='_blank'>MIT license</a></br>
+        	<a class="button" href="http://jquery.com/" target="_blank">jQuery 2.0.0</a> licensed under <a href='https://github.com/jquery/jquery/blob/master/MIT-LICENSE.txt' target='_blank'>MIT license</a><br />
+        	<a class="button" href="http://jqueryui.com/" target="_blank">jQuery UI 1.10.2</a> licensed under <a href='https://github.com/jquery/jquery-ui/blob/master/MIT-LICENSE.txt' target='_blank'>MIT license</a></br>
+		Copyright of these projects goes to the respective owners. 
         	<br />
-        	&copy; Tom Wiesing 2013
+        	
         </div>
     </body>
 </html>
