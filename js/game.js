@@ -197,13 +197,13 @@ var BoxLayout = function(width, height){
 */
 var TriangleLayout = function(size){
 	var box = [];
-	for(var i=0;i<size;i++){
+	for(var i=0;i<=size;i++){
 		for(var j=0;j<i;j++){
-			box.push([size-i-1, size-j-1-1]);
+			box.push([size-i, size-j-1]);
 		}
 	}
-	box.maxX = size-2;
-	box.maxY = size-2;
+	box.maxX = size-1;
+	box.maxY = size-1;
 	return box;
 };
 
