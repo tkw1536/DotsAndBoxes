@@ -9,7 +9,7 @@
 
 var startbutton, table, turn, playercount, Player_Colors, layout; //Global variables
 
-Player_Colors = ["red", "blue", "green", "yellow", "orange", "cyan"];
+Player_Colors = ["red", "blue", "green", "yellow", "orange", "cyan"]; //Available player colors
 
 /*
 	Start a game
@@ -17,47 +17,55 @@ Player_Colors = ["red", "blue", "green", "yellow", "orange", "cyan"];
 var game_start = function(){
 	
 	turn = -1; //reset turns
-
+	
+	//get properties
 	playercount = parseInt($("#playercount").spinner("value"));
 
 	var h = parseInt($("#gheight").spinner("value"));
 	var w = parseInt($("#gwidth").spinner("value"));
-	
-	if($("#layouttype").val() == "box"){
-		layout = BoxLayout(w, h);
-	} else if($("#layouttype").val() == "triangle"){
-		layout = TriangleLayout(w);
-	}
-	
 	
 	if(isNaN(h) || isNaN(w) || isNaN(playercount)){
 		alert("Please enter valid numbers! ");
 		return; 
 	}
 	
+	//create the layout
+	if($("#layouttype").val() == "box"){
+		layout = BoxLayout(w, h);
+	} else if($("#layouttype").val() == "triangle"){
+		layout = TriangleLayout(w);
+	}
+	
+	//reset the start button
 	startbutton.val("Restart game");
 	
-	//calc actual table width & height
+	//calculate actual table width & height
 	var aw = 2*layout.maxX+3;
 	var ah = 2*layout.maxY+3;
 	
+	//make the table
 	table = create_table(aw, ah);
 	
 	
-	//table formating
-	var rows_dots = $("");
+	//format the table
+	var rows_dots = $(""); 
 	var column_dots = $("");
+	
+	//get rows
 	for(var i=0;i<ah;i=i+2){
-		rows_dots = rows_dots.add(table_get_row(i));
+		rows_dots = rows_dots.add(table_get_row(i)); 
 	}
+	//get columns
 	for(var i=0;i<aw;i=i+2){
 		column_dots = column_dots.add(table_get_column(i));
 	}
 	
+	//get the actual dots
 	var dots = rows_dots.filter(column_dots)
 	.addClass("dot");
 	
-	dots = dots.filter(function(i, e){
+	//remove non-dots
+	dots.each(function(i, e){
 		var dot = $(e);
 		if(!DotIsInLayout(dot.data("x"), dot.data("y"))){
 			dot.addClass("undot"); 
@@ -67,6 +75,7 @@ var game_start = function(){
 		return true;
 	});
 	
+	//make horizontal lines selectable
 	var rows = rows_dots.not(dots).addClass("selectablevert").filter(function(i, e){
 		var cell = $(e);
 		if(!LineIsInLayout(cell.data("x"), cell.data("y"))){
@@ -76,6 +85,7 @@ var game_start = function(){
 		return true;
 	});
 	
+	//make vertical lines selectable
 	var columns = column_dots.not(dots).addClass("selectablehort").filter(function(i, e){
 		var cell = $(e);
 		if(!LineIsInLayout(cell.data("x"), cell.data("y"))){
@@ -85,8 +95,10 @@ var game_start = function(){
 		return true;
 	});;
 
+	//append the table to the game area
 	$("#gamearea").html("").append(table);
 		
+	//update the game
 	game_update();
 };
 
@@ -94,6 +106,7 @@ var game_start = function(){
 	Update the game
 */
 var game_update = function(){
+	//remove all the old listeners etc
 	var data = table
 	.find(".selectablevert, .selectablehort")
 	.off("click")
@@ -106,17 +119,20 @@ var game_update = function(){
 		game_update();
 	});
 
-	var did_something = false;
+	var did_something = false; //Did the player gain a new box?
 	
-	var points = []
+	//create points array for player points and populate it
+	var points = [];
 	for(var i=0;i<playercount;i++){
 		points.push(0);		
 	}
 	
+	//iterate over all the boxes in the layout and check if the yhave already been taken or if they are surrounded 
 	for(var i=0;i<=layout.maxX;i++){
 		for(var j=0;j<=layout.maxY;j++){
 			if(BoxIsInLayout(2*i+1, 2*j+1)){
 				if(!is_taken(i, j) && is_surrounded(i, j)){
+					//box is suurounded but not taken
 					get_table_cell(2*i+1, 2*j+1)
 					.addClass("taken")
 					.css("background-color", getplayercolor(turn))
@@ -125,6 +141,7 @@ var game_update = function(){
 				}
 				
 				if(is_taken(i, j)){
+					//count the points
 					points[
 						get_table_cell(2*i+1, 2*j+1).data("playerId")
 					]++;
@@ -133,10 +150,12 @@ var game_update = function(){
 		}
 	}
 	
+	//whos next ?
 	if(!did_something){
 		turn = (turn + 1) % playercount;
 	}
 
+	//set the hover color
 	data
 	.hover(function(){
 		$(this).css("background-color", getplayercolor(turn));
@@ -152,6 +171,7 @@ var game_update = function(){
 		scoreNode.append("<br />");		
 	}
 	
+	//update the player ranking
 	var ranking = makePlayerRanking(points, playercount);
 	
 	var taken = 0;
@@ -193,7 +213,7 @@ var BoxLayout = function(width, height){
 };
 
 /*
-	A Box layout
+	A Triangle layout
 */
 var TriangleLayout = function(size){
 	var box = [];
@@ -209,11 +229,13 @@ var TriangleLayout = function(size){
 
 /*	
 
-	Checks if a box is in layout
+	Checks if a box is in the current layout
 */
 var BoxIsInLayout = function(boxX, boxY){
 	var x = (boxX-1) / 2;
 	var y = (boxY-1) / 2;
+	//return (layout.indexOf([x, y]) == -1)
+	//above line does not work because [0, 0] == [0, 0] returns false
 	for(var i=0;i<layout.length;i++){
 		if(layout[i][0] == x && layout[i][1] == y){
 			return true;
@@ -223,9 +245,10 @@ var BoxIsInLayout = function(boxX, boxY){
 };
 
 /*
-	Checks if a line is in the layout
+	Checks if a line is in the current layout
 */
 var LineIsInLayout = function(lineX, lineY){
+	//check if we are are adjacent to a box
 	return (
 		   BoxIsInLayout(lineX, lineY+1)
 		|| BoxIsInLayout(lineX, lineY-1)
@@ -234,7 +257,11 @@ var LineIsInLayout = function(lineX, lineY){
 	);
 }
 
+/*
+	Checks if a dot is in the current layout
+*/
 var DotIsInLayout = function(dotX, dotY){
+	//check if we have an adjacent line that ends here
 	return (
 		   LineIsInLayout(dotX, dotY+1)
 		|| LineIsInLayout(dotX, dotY-1)
@@ -244,8 +271,11 @@ var DotIsInLayout = function(dotX, dotY){
 }
 
 
-/* Get player ranking */
+/*
+	Get player ranking
+*/
 var makePlayerRanking = function(player_scores){
+	//first sort the scores then get the player ids
 	var arr = [];
 	for(var i=0;i<playercount;i++){
 		arr.push([i, player_scores[i]]);
@@ -348,50 +378,11 @@ var table_get_column = function(i){
 	return table.find("tr td:nth-child("+(i+1)+")");
 }
 
-
-//Inititalisation
-$(function(){
-	var buttons = $(":button, a.button").button();
-	startbutton = buttons.eq(0);
-	
-	$("#gheight, #gwidth").spinner({
-		spin: function(event, ui) {
-			if(ui.value<1) {
-				$(this).spinner( "value", 1 );
-				return false;
-			}
-		}
-	}); 
-
-	$("#playercount").spinner({
-		spin: function(event, ui) {
-			if(ui.value<2) {
-				$(this).spinner( "value", 2 );
-				return false;
-			}
-			if(ui.value>Player_Colors.length) {
-				$(this).spinner( "value", Player_Colors.length );
-				return false;
-			}
-		}
-	}); 
-	
-	$("#layouttype").change(function(){
-		if($(this).val() == "triangle"){
-			$("#gheight").spinner("disable");
-		} else {
-			$("#gheight").spinner("enable");
-		}
-	});
-	
-	startbutton.click(game_start);
-	
-	$("#controls, #about, #scores").hide();
-	$("#gamearea").find("span").text("Loading Game... ");
-	
-	window.setTimeout(function(){
-		$("#gamearea").find("span").text("Press start to start a new game. ");
-
+/*
+	Updates the controls UI
+*/
+var uiUpdate = function(){
+		//make all the dialoges
 		$("#about").dialog({
 			closeOnEscape: false,
 			open: function(event, ui) { $(this).parent().find(".ui-dialog-titlebar-close").remove(); },
@@ -399,7 +390,9 @@ $(function(){
 				my: "right top", 
 				at: "right top", 
 				of: $("body")
-			}
+			},
+			draggable: false,
+			resizeStop: uiUpdate
 		});
 	
 		$("#controls").dialog({
@@ -411,7 +404,9 @@ $(function(){
 				my: "right top", 
 				at: "left top", 
 				of: $("#about").parent()
-			}
+			},
+			draggable: false,
+			resizeStop: uiUpdate
 		});
 	
 		$("#scores").dialog({
@@ -419,12 +414,69 @@ $(function(){
 			open: function(event, ui) {
 				$(this).parent().find(".ui-dialog-titlebar-close").remove();
 			},
-			height: 250,
 			position: {
 				my: "right top", 
 				at: "right bottom", 
 				of: $("#controls").parent()
-			}
+			},
+			draggable: false,
+			resizeStop: uiUpdate
 		});
+	};
+
+
+//Inititalisation
+$(function(){
+	
+	var buttons = $(":button, a.button").button(); //init all buttons
+	startbutton = buttons.eq(0); //get the start buttons
+	
+	//create the spinners
+	$("#gheight, #gwidth").spinner({
+		spin: function(event, ui) {
+			if(ui.value<1) { //width >= 1
+				$(this).spinner( "value", 1 );
+				return false;
+			}
+		}
+	}); 
+
+	$("#playercount").spinner({
+		spin: function(event, ui) {
+			if(ui.value<2) { //width >= 2
+				$(this).spinner( "value", 2 );
+				return false;
+			}
+			if(ui.value>Player_Colors.length) { //we only have so many colors
+				$(this).spinner( "value", Player_Colors.length );
+				return false;
+			}
+		}
+	}); 
+	
+	//disable the height spinner for triangle layout
+	$("#layouttype").change(function(){
+		if($(this).val() == "triangle"){
+			$("#gheight").spinner("disable");
+		} else {
+			$("#gheight").spinner("enable");
+		}
+	});
+	
+	//Bind the start handler	
+	startbutton.click(game_start);
+	
+	//Load all the stuff
+	$("#controls, #about, #scores").hide();
+	$("#gamearea").find("span").text("Loading Game... ");
+	
+	window.setTimeout(function(){
+		$("#gamearea").find("span").text("Press start to start a new game. ");
+		
+		$(window).resize(uiUpdate).resize(); //bind window.resize handler and trigger it
+		
+		$("#about").dialog("option", "height", 400);
+		$("#controls").dialog("option", "height", 150);
+		$("#scores").dialog("option", "height", 250);
 	}, 100);
 });
