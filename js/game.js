@@ -7,9 +7,9 @@
 	send a letter to Creative Commons, 444 Castro Street, Suite 900, Mountain View, California, 94041, USA.
 */
 
-var startbutton, table, w, h, turn, playercount, Player_Colors; //Global variables
+var startbutton, table, turn, playercount, Player_Colors, layout; //Global variables
 
-Player_Colors = ["red", "blue", "green", "yellow", "orange", "grey"];
+Player_Colors = ["red", "blue", "green", "yellow", "orange", "cyan"];
 
 /*
 	Start a game
@@ -20,8 +20,15 @@ var game_start = function(){
 
 	playercount = parseInt($("#playercount").spinner("value"));
 
-	h = parseInt($("#gheight").spinner("value"));
-	w = parseInt($("#gwidth").spinner("value"));
+	var h = parseInt($("#gheight").spinner("value"));
+	var w = parseInt($("#gwidth").spinner("value"));
+	
+	if($("#layouttype").val() == "box"){
+		layout = BoxLayout(w, h);
+	} else if($("#layouttype").val() == "triangle"){
+		layout = TriangleLayout(w);
+	}
+	
 	
 	if(isNaN(h) || isNaN(w) || isNaN(playercount)){
 		alert("Please enter valid numbers! ");
@@ -31,8 +38,8 @@ var game_start = function(){
 	startbutton.val("Restart game");
 	
 	//calc actual table width & height
-	var aw = 2*w+1;
-	var ah = 2*h+1;
+	var aw = 2*layout.maxX+3;
+	var ah = 2*layout.maxY+3;
 	
 	table = create_table(aw, ah);
 	
@@ -48,43 +55,67 @@ var game_start = function(){
 	}
 	
 	var dots = rows_dots.filter(column_dots)
-	.removeClass("selectablehort")
-	.removeClass("selectablevert")
 	.addClass("dot");
 	
-	var rows = rows_dots.not(dots).addClass("selectablevert");
-	var columns = column_dots.not(dots).addClass("selectablehort");
+	dots = dots.filter(function(i, e){
+		var dot = $(e);
+		if(!DotIsInLayout(dot.data("x"), dot.data("y"))){
+			dot.addClass("undot"); 
+		} else {
+			return true;
+		}
+		return true;
+	});
+	
+	var rows = rows_dots.not(dots).addClass("selectablevert").filter(function(i, e){
+		var cell = $(e);
+		if(!LineIsInLayout(cell.data("x"), cell.data("y"))){
+			cell.removeClass("selectablevert").addClass("unselectablevert");
+			return false;
+		}
+		return true;
+	});
+	
+	var columns = column_dots.not(dots).addClass("selectablehort").filter(function(i, e){
+		var cell = $(e);
+		if(!LineIsInLayout(cell.data("x"), cell.data("y"))){
+			cell.removeClass("selectablehort").addClass("unselectablehort");
+			return false;
+		}
+		return true;
+	});;
 
 	$("#gamearea").html("").append(table);
 		
 	game_update();
 };
 
-	/*
-		Update the game
-	*/
-	var game_update = function(){
-		var data = table
-		.find(".selectablevert, .selectablehort")
-		.off("click")
-		.off("mouseenter mouseleave")
-		.removeAttr("style")
-		.not(".selected")
+/*
+	Update the game
+*/
+var game_update = function(){
+	var data = table
+	.find(".selectablevert, .selectablehort")
+	.off("click")
+	.off("mouseenter mouseleave")
+	.removeAttr("style")
+	.not(".selected")
 
-		.click(function(){
-			$(this).addClass("selected");
-			game_update();
-		});
+	.click(function(){
+		$(this).addClass("selected");
+		game_update();
+	});
 
-		var did_something = false;
-		
-		var points = []
-		for(var i=0;i<playercount;i++){
-			points.push(0);		
-		}
-		
-		for(var i=0;i<h;i++){
-			for(var j=0;j<w;j++){
+	var did_something = false;
+	
+	var points = []
+	for(var i=0;i<playercount;i++){
+		points.push(0);		
+	}
+	
+	for(var i=0;i<=layout.maxX;i++){
+		for(var j=0;j<=layout.maxY;j++){
+			if(BoxIsInLayout(2*i+1, 2*j+1)){
 				if(!is_taken(i, j) && is_surrounded(i, j)){
 					get_table_cell(2*i+1, 2*j+1)
 					.addClass("taken")
@@ -92,6 +123,7 @@ var game_start = function(){
 					.data("playerId", turn);
 					did_something = true;
 				}
+				
 				if(is_taken(i, j)){
 					points[
 						get_table_cell(2*i+1, 2*j+1).data("playerId")
@@ -99,50 +131,118 @@ var game_start = function(){
 				}
 			}
 		}
-		
-		if(!did_something){
-			turn = (turn + 1) % playercount;
-		}
+	}
+	
+	if(!did_something){
+		turn = (turn + 1) % playercount;
+	}
 
-		data
-		.hover(function(){
-			$(this).css("background-color", getplayercolor(turn));
-		}, function(){
-			$(this).removeAttr("style");
-		});
-		
-		var scoreNode = $("#scores").html("");
+	data
+	.hover(function(){
+		$(this).css("background-color", getplayercolor(turn));
+	}, function(){
+		$(this).removeAttr("style");
+	});
+	
+	var scoreNode = $("#scores").html("");
 
-		if(gameHasWinner(points)){
-			scoreNode.append("The first place can no longer change. <br />");		
-		} else {
-			scoreNode.append("<br />");		
+	if(gameHasWinner(points)){
+		scoreNode.append("The first place can no longer change. <br />");		
+	} else {
+		scoreNode.append("<br />");		
+	}
+	
+	var ranking = makePlayerRanking(points, playercount);
+	
+	var taken = 0;
+	
+	for(var i=0;i<ranking.length;i++){
+		for(var j=0;j<ranking[i].length;j++){
+			var player = ranking[i][j];
+			var score = points[player];
+			var color = getplayercolor(player);
+			taken += score; 
+			var node = $("<span>").text((i+1).toString()+") Player "+(player+1)+" - "+score+" Boxes").css("background-color", color).width(200);
+			scoreNode.append(
+				node, 
+				$("<br />")
+			);
+			if(player == turn){node.css("font-weight", "bold");}
 		}
-		
-		var ranking = makePlayerRanking(points, playercount);
-		
-		var taken = 0;
-		
-		for(var i=0;i<ranking.length;i++){
-			for(var j=0;j<ranking[i].length;j++){
-				var player = ranking[i][j];
-				var score = points[player];
-				var color = getplayercolor(player);
-				taken += score; 
-				var node = $("<span>").text((i+1).toString()+") Player "+(player+1)+" - "+score+" Boxes").css("background-color", color).width(200);
-				scoreNode.append(
-					node, 
-					$("<br />")
-				);
-				if(player == turn){node.css("font-weight", "bold");}
-			}
+	}
+	
+	scoreNode.append(
+		$("<span>").text(""+taken+"/"+(layout.length)+" Boxes occupied. ").width(200), 
+		$("<br />")
+	);
+};
+
+/*
+	A Box layout
+*/
+var BoxLayout = function(width, height){
+	var box = [];
+	for(var i=0;i<width;i++){
+		for(var j=0;j<height;j++){
+			box.push([i, j]);
 		}
-		
-		scoreNode.append(
-			$("<span>").text(""+taken+"/"+(w*h)+" Boxes occupied. ").width(200), 
-			$("<br />")
-		);
-	};
+	}
+	box.maxX = width-1;
+	box.maxY = height-1;
+	return box;
+};
+
+/*
+	A Box layout
+*/
+var TriangleLayout = function(size){
+	var box = [];
+	for(var i=0;i<size;i++){
+		for(var j=0;j<i;j++){
+			box.push([size-i-1, size-j-1-1]);
+		}
+	}
+	box.maxX = size-2;
+	box.maxY = size-2;
+	return box;
+};
+
+/*	
+
+	Checks if a box is in layout
+*/
+var BoxIsInLayout = function(boxX, boxY){
+	var x = (boxX-1) / 2;
+	var y = (boxY-1) / 2;
+	for(var i=0;i<layout.length;i++){
+		if(layout[i][0] == x && layout[i][1] == y){
+			return true;
+		}
+	}
+	return false;
+};
+
+/*
+	Checks if a line is in the layout
+*/
+var LineIsInLayout = function(lineX, lineY){
+	return (
+		   BoxIsInLayout(lineX, lineY+1)
+		|| BoxIsInLayout(lineX, lineY-1)
+		|| BoxIsInLayout(lineX+1, lineY)
+		|| BoxIsInLayout(lineX-1, lineY)
+	);
+}
+
+var DotIsInLayout = function(dotX, dotY){
+	return (
+		   LineIsInLayout(dotX, dotY+1)
+		|| LineIsInLayout(dotX, dotY-1)
+		|| LineIsInLayout(dotX+1, dotY)
+		|| LineIsInLayout(dotX-1, dotY)
+	);
+}
+
 
 /* Get player ranking */
 var makePlayerRanking = function(player_scores){
@@ -167,12 +267,13 @@ var makePlayerRanking = function(player_scores){
 	}
 	return res;
 };
+
 /*
 	Check if the game has a winner. 
 */
 var gameHasWinner = function(player_scores){
 	var total = 0;
-	var maxPoints = w*h;
+	var maxPoints = layout.length;
 	for(var i=0;i<player_scores.length;i++){
 		total += player_scores[i];
 		if(player_scores[i] > (maxPoints) / 2){
@@ -216,10 +317,12 @@ var create_table = function(w, h){
 	var $td = $("<td>");
 	var $tr = $("<tr>");
 	for(var i=0;i<w;i++){
-		$tr.append($td.clone());
+		$tr.append($td.clone().data("x", i));
 	}
 	for(var i=0;i<h;i++){
-		$table.append($tr.clone());
+		var clone = $tr.clone(true);
+		clone.find("td").addBack().data("y", i);
+		$table.append(clone);
 	}
 	return $table;
 }
@@ -228,7 +331,7 @@ var create_table = function(w, h){
 	Get table cell
 */
 var get_table_cell = function(i, j){
-	return table.find("tr:nth-child("+(i+1)+") td:nth-child("+(j+1)+")");
+	return table.find("tr:nth-child("+(j+1)+") td:nth-child("+(i+1)+")");
 }
 
 /*
@@ -273,7 +376,13 @@ $(function(){
 		}
 	}); 
 	
-	
+	$("#layouttype").change(function(){
+		if($(this).val() == "triangle"){
+			$("#gheight").spinner("disable");
+		} else {
+			$("#gheight").spinner("enable");
+		}
+	});
 	
 	startbutton.click(game_start);
 	

@@ -35,7 +35,11 @@
         
 	<!-- Settings -->
         <div id="controls" title="Game controls">
-        	Size: <input id="gheight" value="3" > x <input id="gwidth" value="3"> <br />
+        	<select id="layouttype">
+        		<option value="box" selected="selected">Box</option>
+        		<option value="triangle">Triangle</option>
+        	</select>
+        	<input id="gwidth" value="3"> <input id="gheight" value="3" >  <br />
 		Player(s): <input id="playercount" value="2" > <br />
         	<input type="button" value="Start">
         </div>

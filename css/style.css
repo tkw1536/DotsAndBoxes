@@ -32,12 +32,16 @@ html, body {
 	height:10px; 
 }
 
-.selectablevert {
+.undot {
+	background-color: grey !important;
+}
+
+.selectablevert, .unselectablevert {
 	width: 60px;
 	height: 10px; 
 }
 
-.selectablehort {
+.selectablehort, .unselectablehort {
 	width: 10px;
 	height: 60px; 
 }
