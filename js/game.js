@@ -391,7 +391,6 @@ var uiUpdate = function(){
 				at: "right top", 
 				of: $("body")
 			},
-			draggable: false,
 			resizeStop: uiUpdate
 		});
 	
@@ -405,7 +404,6 @@ var uiUpdate = function(){
 				at: "left top", 
 				of: $("#about").parent()
 			},
-			draggable: false,
 			resizeStop: uiUpdate
 		});
 	
@@ -419,7 +417,6 @@ var uiUpdate = function(){
 				at: "right bottom", 
 				of: $("#controls").parent()
 			},
-			draggable: false,
 			resizeStop: uiUpdate
 		});
 	};

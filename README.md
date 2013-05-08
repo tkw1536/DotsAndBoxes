@@ -8,6 +8,9 @@ Tested successfully on:
 * Mozilla Firefox 20.0
 
 [Live Demo](http://tkw1536.github.io/DotsAndBoxes/)
+[GitHub Repository](https://github.com/tkw1536/DotsAndBoxes)
+
+Note: Since this project uses jQuery 2.0 old Internet Explorer versions are not supported. 
 
 (c) Tom Wiesing 2013
 
